@@ -9,7 +9,9 @@ package raft
 // test with the original before submitting.
 //
 
-import "sync"
+import (
+	"sync"
+)
 
 type Persister struct {
 	mu        sync.Mutex
@@ -54,6 +56,13 @@ func (ps *Persister) SaveStateAndSnapshot(state []byte, snapshot []byte) {
 	ps.mu.Lock()
 	defer ps.mu.Unlock()
 	ps.raftstate = state
+	ps.snapshot = snapshot
+}
+
+// TBD
+func (ps *Persister) SaveSnapshot(snapshot []byte) {
+	ps.mu.Lock()
+	defer ps.mu.Unlock()
 	ps.snapshot = snapshot
 }
 
