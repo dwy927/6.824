@@ -1,5 +1,11 @@
 package mapreduce
 
+import (
+	"os"
+	"encoding/json"
+	"sort"
+)
+
 func doReduce(
 	jobName string, // the name of the whole MapReduce job
 	reduceTask int, // which reduce task this is
@@ -44,4 +50,47 @@ func doReduce(
 	//
 	// Your code here (Part I).
 	//
+
+	var keys []string                   // store all keys in this partition
+	var kvs = make(map[string][]string) // store all key-value pairs from nMap intermediate files
+
+	// read nMap intermediate files from map workers
+	for i := 0; i < nMap; i++ {
+		fileName := reduceName(jobName, i, reduceTask)
+		intermediateFile, err := os.Open(fileName)
+		if err != nil {
+			debug("open immediate file %s failed", fileName)
+			continue
+		}
+
+		var kv KeyValue
+		decoder := json.NewDecoder(intermediateFile)
+		err = decoder.Decode(&kv)
+		for err == nil {
+			if _, ok := kvs[kv.Key]; !ok {
+				keys = append(keys, kv.Key)
+			}
+			kvs[kv.Key] = append(kvs[kv.Key], kv.Value)
+
+			// decode repeatedly until an error
+			err = decoder.Decode(&kv)
+		}
+	}
+
+	// keys in one partition are processed in increasing key order
+	sort.Strings(keys)
+
+	out, err := os.Create(outFile)
+	if err != nil {
+		debug("create output file %s failed", outFile)
+		return
+	}
+
+	encoder := json.NewEncoder(out)
+	for _, key := range keys {
+		if err := encoder.Encode(KeyValue{key, reduceF(key, kvs[key])}); err != nil {
+			debug("write [key: %s] to file %s failed", key, outFile)
+		}
+	}
+	out.Close()
 }

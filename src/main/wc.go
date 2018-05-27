@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"mapreduce"
 	"os"
+	"unicode"
+	"strings"
+	"strconv"
 )
 
 //
@@ -15,6 +18,17 @@ import (
 //
 func mapF(filename string, contents string) []mapreduce.KeyValue {
 	// Your code here (Part II).
+	//ref: https://golang.org/pkg/strings/#FieldsFunc
+	var kvs []mapreduce.KeyValue
+	f := func (c rune) bool {
+		return !unicode.IsLetter(c)
+	}
+	words := strings.FieldsFunc(contents, f)
+	for _, word := range words {
+		kv := mapreduce.KeyValue{Key: word, Value: "1"}
+		kvs = append(kvs, kv)
+	}
+	return kvs
 }
 
 //
@@ -24,6 +38,14 @@ func mapF(filename string, contents string) []mapreduce.KeyValue {
 //
 func reduceF(key string, values []string) string {
 	// Your code here (Part II).
+
+	/*****************************************************************
+	 * what is the difference between string() and strconv.Itoa ???????
+	 * return string(len(values)) will leed to wrong
+	 *****************************************************************/
+
+	//return string(len(values))
+	return strconv.Itoa(len(values))
 }
 
 // Can be run in 3 ways:

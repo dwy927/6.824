@@ -62,5 +62,5 @@ func (mr *Master) stopRPCServer() {
 	if ok == false {
 		fmt.Printf("Cleanup: RPC %s error\n", mr.address)
 	}
-	debug("cleanupRegistration: done\n")
+	debug("cleanupRegistration: done\n", ok)
 }

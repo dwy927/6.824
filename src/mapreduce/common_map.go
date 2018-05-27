@@ -2,6 +2,9 @@ package mapreduce
 
 import (
 	"hash/fnv"
+	"io/ioutil"
+	"os"
+	"encoding/json"
 )
 
 func doMap(
@@ -53,6 +56,51 @@ func doMap(
 	//
 	// Your code here (Part I).
 	//
+
+
+	 // read inFile and get the contents
+	 // ref: https://golang.org/pkg/io/ioutil/#ReadFile
+	 contents, err := ioutil.ReadFile(inFile)
+	 if err != nil {
+		 	debug("read file %s failed", inFile)
+			return
+	 }
+
+	 //invoke mapF function to get intermediate key-value pairs
+	 keyValues := mapF(inFile, string(contents))
+
+	 // create nReduce files and encoders for output
+	 var intermediateFiles = make([]*os.File, nReduce)
+	 var encoders = make([]*json.Encoder, nReduce)
+	 for i := 0; i < nReduce; i++ {
+		 filename_i := reduceName(jobName, mapTask, i)
+		 f, err := os.Create(filename_i)
+		 if err != nil {
+			 debug("create file %s failed", filename_i)
+		 } else {
+			 intermediateFiles[i] = f
+			 encoders[i] = json.NewEncoder(f)
+	   }
+	 }
+
+	 // write keyValue to corresponding file
+	 for _, keyValue := range keyValues {
+			r := ihash(keyValue.Key) % nReduce
+			if encoders[r] != nil {
+				err := encoders[r].Encode(&keyValue)
+				if err != nil {
+					debug("wirte %v to file %s failed", keyValue, reduceName(jobName, mapTask, r))
+				}
+			}
+	 }
+
+	// close immediate files
+	for i := 0; i < nReduce; i++ {
+		if intermediateFiles[i] != nil {
+			intermediateFiles[i].Close()
+		}
+	}
+
 }
 
 func ihash(s string) int {
