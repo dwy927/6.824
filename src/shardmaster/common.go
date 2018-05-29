@@ -35,7 +35,9 @@ const (
 type Err string
 
 type JoinArgs struct {
-	Servers map[int][]string // new GID -> servers mappings
+	ClientID int64 // for duplicate detection
+	SeqNo    int
+	Servers  map[int][]string // new GID -> servers mappings
 }
 
 type JoinReply struct {
@@ -44,7 +46,9 @@ type JoinReply struct {
 }
 
 type LeaveArgs struct {
-	GIDs []int
+	ClientID int64 // for duplicate detection
+	SeqNo    int
+	GIDs     []int
 }
 
 type LeaveReply struct {
@@ -53,8 +57,10 @@ type LeaveReply struct {
 }
 
 type MoveArgs struct {
-	Shard int
-	GID   int
+	ClientID int64 // for duplicate detection
+	SeqNo    int
+	Shard    int
+	GID      int
 }
 
 type MoveReply struct {
@@ -63,7 +69,9 @@ type MoveReply struct {
 }
 
 type QueryArgs struct {
-	Num int // desired config number
+	ClientID int64 // for duplicate detection
+	SeqNo    int
+	Num      int // desired config number
 }
 
 type QueryReply struct {
