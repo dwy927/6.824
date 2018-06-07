@@ -26,6 +26,8 @@ type PutAppendArgs struct {
 	// You'll have to add definitions here.
 	// Field names must start with capital letters,
 	// otherwise RPC will break.
+	ClientID int64
+	SeqNo    int
 }
 
 type PutAppendReply struct {
@@ -36,10 +38,39 @@ type PutAppendReply struct {
 type GetArgs struct {
 	Key string
 	// You'll have to add definitions here.
+	ClientID int64
+	SeqNo    int
 }
 
 type GetReply struct {
 	WrongLeader bool
 	Err         Err
 	Value       string
+}
+
+type MigrateArgs struct {
+	Num   int // sequence no
+	Shard int
+	Gid   int
+}
+
+type MigrateReply struct {
+	WrongLeader bool
+	Err         Err
+	Num         int
+	Shard       int
+	Gid         int
+	Data        Database
+	Dup         Duplicate
+}
+
+type CleanUpArgs struct {
+	Num   int
+	Shard int
+	Gid   int
+}
+
+type CleanUpReply struct {
+	WrongLeader bool
+	Err         Err
 }
